@@ -1,0 +1,10 @@
+services:
+  olx-monitor:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - monitor-data:/data
+
+volumes:
+  monitor-data:

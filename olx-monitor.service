@@ -1,0 +1,20 @@
+[Unit]
+Description=OLX Apple Telegram monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/olx-monitor
+EnvironmentFile=/opt/olx-monitor/.env
+Environment=DATABASE_PATH=/var/lib/olx-monitor/monitor.sqlite3
+ExecStart=/opt/olx-monitor/.venv/bin/python /opt/olx-monitor/app.py
+Restart=always
+RestartSec=5
+User=olxmonitor
+Group=olxmonitor
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
