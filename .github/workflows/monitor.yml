@@ -1,0 +1,51 @@
+name: OLX Apple monitor
+
+on:
+  schedule:
+    - cron: "2/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: olx-monitor
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Download project
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Check OLX and notify Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DATABASE_PATH: data/monitor.sqlite3
+        run: python github_once.py
+
+      - name: Save sent listing IDs
+        run: |
+          git config user.name "olx-monitor[bot]"
+          git config user.email "olx-monitor@users.noreply.github.com"
+          git add data/monitor.sqlite3
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Update OLX monitor state"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
