@@ -15,7 +15,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - name: Download project
         uses: actions/checkout@v4
@@ -31,12 +31,18 @@ jobs:
       - name: Install packages
         run: pip install -r requirements.txt
 
-      - name: Check OLX and notify Telegram
+      - name: Check OLX every minute and notify Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DATABASE_PATH: data/monitor.sqlite3
-        run: python github_once.py
+        run: |
+          for pass in 1 2 3 4 5; do
+            python github_once.py
+            if [ "$pass" -lt 5 ]; then
+              sleep 55
+            fi
+          done
 
       - name: Save sent listing IDs
         run: |
